@@ -26,61 +26,72 @@ async function processUserData(userId) {
         // Obtener datos del usuario y publicaciones
         const user = await getUser(userId);
         const posts = await getPosts(userId);
-        
-        // 1. Map: Añadir longitud del título y del contenido a las publicaciones
-        const enhancedPosts = posts.map(post => ({
-            ...post,
-            titleLength: post.title.length,
-            bodyLength: post.body.length,
-            totalLength: post.title.length + post.body.length
+
+        // Obtener todos los comentarios de las publicaciones
+        const postsWithComments = await Promise.all(posts.map(async post => {
+            const comments = await getComments(post.id);
+            return {
+                ...post,
+                comments,
+                titleWords: post.title.split(' ').length,
+                bodyWords: post.body.split(' ').length,
+                totalWords: post.title.split(' ').length + post.body.split(' ').length,
+                // Calcular la longitud promedio de los comentarios
+                avgCommentLength: comments.reduce((sum, comment) => sum + comment.body.length, 0) / comments.length
+            };
         }));
+        // Usar filter + map + reduce juntos
+        // Encontrar publicaciones con más palabras que el promedio y extraer la cantidad de palabras del título
+        const avgTotalWords = postsWithComments.reduce((sum, post) => 
+            sum + post.totalWords, 0) / postsWithComments.length;
+            
+        const wordCountAnalysis = postsWithComments
+            .filter(post => post.totalWords > avgTotalWords) // Filtrar contenido largo
+            .map(post => ({
+                id: post.id,
+                title: post.title,
+                titleWords: post.titleWords,
+                bodyWords: post.bodyWords,
+                totalWords: post.totalWords
+            })) // Extraer información de la cantidad de palabras
+            .reduce((result, post) => {
+                result.posts.push(post);
+                result.totalWordCount += post.totalWords;
+                result.averageTitleWords = result.posts.reduce((sum, p) => sum + p.titleWords, 0) / result.posts.length;
+                return result;
+            }, { posts: [], totalWordCount: 0, averageTitleWords: 0 }); // Resumen de estadísticas
         
-        // 2. Sort: Ordenar publicaciones por longitud total
-        const sortedPosts = [...enhancedPosts].sort((a, b) => 
-            b.totalLength - a.totalLength
-        );
-        
-        // 3. Filter: Filtrar publicaciones con títulos largos (longitud del título > 50)
-        const longTitlePosts = enhancedPosts.filter(post => 
-            post.titleLength > 50
-        );
-        
-        // 4. Reduce: Calcular estadísticas básicas
-        const stats = enhancedPosts.reduce((acc, post) => ({
-            totalPosts: acc.totalPosts + 1,
-            avgTitleLength: acc.avgTitleLength + post.titleLength,
-            avgBodyLength: acc.avgBodyLength + post.bodyLength
-        }), { totalPosts: 0, avgTitleLength: 0, avgBodyLength: 0 });
-        
-        // Calcular promedios
-        stats.avgTitleLength = Math.round(stats.avgTitleLength / stats.totalPosts);
-        stats.avgBodyLength = Math.round(stats.avgBodyLength / stats.totalPosts);
+        // Usar sort + filter + map juntos
+        // Encontrar las 3 publicaciones con más palabras en el título
+        const topWordCountPosts = postsWithComments
+            .sort((a, b) => b.titleWords - a.titleWords) // Ordenar por cantidad de palabras en el título
+            .filter((_, index) => index < 3) // Seleccionar las primeras 3
+            .map(post => ({ // Extraer los campos necesarios
+                id: post.id,
+                title: post.title,
+                titleWords: post.titleWords,
+                ratio: (post.titleWords / post.totalWords * 100).toFixed(1) + '%'
+            }));
 
         // Mostrar resultados
         console.log('===== Resultados del análisis de datos =====');
         console.log(`Usuario: ${user.name}\n`);
-        
-        console.log('1. Estadísticas básicas:');
-        console.log(`- Total de publicaciones: ${stats.totalPosts}`);
-        console.log(`- Longitud promedio del título: ${stats.avgTitleLength} caracteres`);
-        console.log(`- Longitud promedio del contenido: ${stats.avgBodyLength} caracteres\n`);
-        
-        console.log('2. Las 3 publicaciones más largas:');
-        sortedPosts.slice(0, 3).forEach((post, index) => {
-            console.log(`[${index + 1}] ${post.totalLength} caracteres - ${post.title.slice(0, 30)}...`);
-        });
-        
-        console.log('\n3. Publicaciones con títulos largos:');
-        console.log(`Se encontraron ${longTitlePosts.length} publicaciones con títulos largos:`);
-        longTitlePosts.forEach((post, index) => {
-            console.log(`[${index + 1}] ${post.titleLength} caracteres - ${post.title.slice(0, 30)}...`);
+        console.log('Combinación Filter + Map + Reduce:');
+        console.log(`- Promedio total de palabras: ${avgTotalWords.toFixed(2)} palabras`);
+        console.log(`- Encontradas ${wordCountAnalysis.posts.length} publicaciones con más palabras que el promedio`);
+        console.log(`- Promedio de palabras en el título de estas publicaciones: ${wordCountAnalysis.averageTitleWords.toFixed(2)} palabras\n`);
+    
+        console.log('Combinación Sort + Filter + Map:');
+        console.log('- Las 3 publicaciones con más palabras en el título:');
+        topWordCountPosts.forEach((post, index) => {
+            console.log(`  [${index + 1}] ${post.titleWords} palabras - ${post.ratio} del total de palabras - Título: ${post.title.slice(0, 30)}...`);
         });
 
         return {
             user,
-            stats,
-            sortedPosts,
-            longTitlePosts
+            wordCountAnalysis,
+            topWordCountPosts,
+            commentLengthAnalysis
         };
         
     } catch (error) {

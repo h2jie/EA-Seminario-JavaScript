@@ -18,15 +18,14 @@ Este proyecto demuestra cómo usar funciones avanzadas de arrays de JavaScript (
 
 ## Cómo usar
 
-```bash
 node app.js
 
 ## Referencias
 
 - [JSONPlaceholder](https://jsonplaceholder.typicode.com/)
-- JavaScript Array 方法文档
-  - [Array.prototype.map()](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Array/map)
-  - [Array.prototype.filter()](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Array/filter)
-  - [Array.prototype.reduce()](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Array/Reduce)
-  - [Array.prototype.sort()](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Array/sort)
-
+- [Array.prototype.map()](https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Global_Objects/Array/map)
+- [Array.prototype.filter()](https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Global_Objects/Array/filter)
+- [Array.prototype.reduce()](https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Global_Objects/Array/Reduce)
+- [Array.prototype.sort()](https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Global_Objects/Array/sort)
+- [ChatGPT] (https://chatgpt.com/)
+- [Learn JavaScript - Full Course for Beginners] (https://www.youtube.com/watch?v=PkZNo7MFNFg)
