@@ -90,8 +90,7 @@ async function processUserData(userId) {
         return {
             user,
             wordCountAnalysis,
-            topWordCountPosts,
-            commentLengthAnalysis
+            topWordCountPosts
         };
         
     } catch (error) {
